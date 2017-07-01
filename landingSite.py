@@ -30,12 +30,14 @@ class landingSite(object):
         self.src = src.copy()
         self.original = src.copy()
         self.image_height, self.image_width, self.channels = np.shape(src) # Get frame dimension
+        self.center = None
+        self.radius = 0
         self.red = self.image_process(self.red, self.red_wrap)
         self.blue = self.image_process(self.blue)
         
         # Show output
-#         cv2.imshow('red', self.red)
-        cv2.imshow('edges (red+blue)', self.red + self.blue) # Testing line, uncomment to test
+#         cv2.imshow('red', self.red)#         cv2.imshow('edges (red+blue)', self.red + self.blue) # Testing line, uncomment to test
+
         cv2.imshow('src', self.src) # Testing line, uncomment to test
         
     def image_process(self, color, color_wrap=None):
@@ -143,10 +145,13 @@ class landingSite(object):
 #             cv2.imshow('src', self.src) # Testing line, uncomment to test
 #             cv2.imshow('edges', edges) # Testing line, uncomment to test
 #             cv2.waitKey(0) # Testing line, uncomment to test
-        if bestCirclePercentage > 0.1:
+        if bestCirclePercentage > 0.1 and bestCircleRadius > self.radius:
 #             print bestCirclePercentage # Testing line, uncomment to test
 #             print "circle: center = ", bestCircleCenter, " radius = ", bestCircleRadius # Testing line, uncomment to test
             cv2.circle(self.src, (bestCircleCenter[0], bestCircleCenter[1]), bestCircleRadius, [0,255,0], 4) # Testing line, uncomment to test
+            self.center = bestCircleCenter
+            self.radius = bestCircleRadius
+            
         return
 
     def getCircle(self, x1, y1, x2, y2, x3, y3):
@@ -230,7 +235,7 @@ if __name__ == '__main__':
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
             
         # Do the detection
-        landingSite(src)
+        print landingSite(src).center
 
         # User input
         key = cv2.waitKey(30) & 0xFF
