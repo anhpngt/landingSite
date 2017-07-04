@@ -13,7 +13,7 @@ class landingSite(object):
     min_area_ratio = 0.0009
     min_circle_radius = 20
     max_circle_radius = 300
-    maxIterations = 25
+    maxIterations = 10
     minCirclePercentage = 0.40
     
     # cv2.Canny parameters
@@ -148,7 +148,7 @@ class landingSite(object):
         if bestCirclePercentage > 0.1 and bestCircleRadius > self.radius:
 #             print bestCirclePercentage # Testing line, uncomment to test
 #             print "circle: center = ", bestCircleCenter, " radius = ", bestCircleRadius # Testing line, uncomment to test
-            cv2.circle(self.src, (bestCircleCenter[0], bestCircleCenter[1]), bestCircleRadius, [0,255,0], 4) # Testing line, uncomment to test
+            cv2.circle(self.src, (bestCircleCenter[0], bestCircleCenter[1]), bestCircleRadius, [0,255,0], 2) # Testing line, uncomment to test
             self.center = bestCircleCenter
             self.radius = bestCircleRadius
             
@@ -235,7 +235,7 @@ if __name__ == '__main__':
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
             
         # Do the detection
-        print landingSite(src).center
+        landingSite(cv2.resize(src, None, fx = 0.25, fy = 0.25)).center
 
         # User input
         key = cv2.waitKey(30) & 0xFF
