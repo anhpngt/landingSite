@@ -1,5 +1,4 @@
 # This code is based on semi-circle detection code written by Micka, a stackoverflow.com user
-# Should anything happens, blame him :D 
 import numpy as np
 import cv2
 import sys
