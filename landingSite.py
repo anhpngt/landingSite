@@ -13,17 +13,12 @@ class landingSite(object):
     min_area_ratio = 0.0009
     min_circle_radius = 20
     max_circle_radius = 300
-    maxIterations = 10
-    minCirclePercentage = 0.40
+    maxIterations = 15
+    minCirclePercentage = 0.35
     
     # cv2.Canny parameters
     threshold1 = 100
     threshold2 = 50
-    
-    # Define range of blue/red color in HSV
-    blue = np.array([[100,100,100], [130,230,230]]) # [lower threshold, upper threshold]
-    red = np.array([[0, 100, 70], [25, 255, 255]])
-    red_wrap = np.array([[163, 100, 70], [179, 255, 255]])
     
     def __init__(self, src):
 #         print "NEW FRAME!"
@@ -32,27 +27,26 @@ class landingSite(object):
         self.image_height, self.image_width, self.channels = np.shape(src) # Get frame dimension
         self.center = None
         self.radius = 0
-        self.red = self.image_process(self.red, self.red_wrap)
-        self.blue = self.image_process(self.blue)
+        self.edge = self.image_process()
         
         # Show output
-#         cv2.imshow('red', self.red)#         cv2.imshow('edges (red+blue)', self.red + self.blue) # Testing line, uncomment to test
-
+#         cv2.imshow('red', self.red)
+        cv2.imshow('edges (red+blue)', self.edge) # Testing line, uncomment to test
         cv2.imshow('src', self.src) # Testing line, uncomment to test
         
-    def image_process(self, color, color_wrap=None):
+    def image_process(self):
         # Blur the image
 #         blur = cv2.GaussianBlur(self.original, (3,3), 0)
                 
         # Convert from BGR to HSV
         hsv = cv2.cvtColor(self.original.copy(), cv2.COLOR_BGR2HSV)
         
-        if color_wrap is not None:
-            lower_hue_red = cv2.inRange(hsv, color[0], color[1])
-            upper_hue_red = cv2.inRange(hsv, color_wrap[0], color_wrap[1])
-            dst = cv2.addWeighted(lower_hue_red, 1.0, upper_hue_red, 1.0, 0.0)
-        else:
-            dst = cv2.inRange(hsv, color[0], color[1])
+        # Red color:
+        lower_hue_red = cv2.inRange(hsv, (0, 100, 70), (25, 255, 255))
+        upper_hue_red = cv2.inRange(hsv, (163, 100, 70), (179, 255, 255))
+        red_binary = cv2.addWeighted(lower_hue_red, 1.0, upper_hue_red, 1.0, 0.0)
+        blue_binary = cv2.inRange(hsv, (100,100,100), (130,230,230))
+        dst = cv2.addWeighted(red_binary, 1.0, blue_binary, 1.0, 0.0)
         
         # Smooth the image
         dst = cv2.morphologyEx(dst, cv2.MORPH_OPEN, self.kernel_morph)
@@ -166,7 +160,8 @@ class landingSite(object):
         center[1] = ((x1*x1 + y1*y1)*(y2 - y3) + (x2*x2 + y2*y2)*(y3 - y1) + (x3*x3 + y3*y3)*(y1 - y2))/d
         # Radius
         radius = np.sqrt((center[1]-x1)*(center[1]-x1) + (center[0]-y1)*(center[0]-y1))
-        if radius < self.min_circle_radius or radius > self.max_circle_radius:
+        if(radius < self.min_circle_radius or radius > self.max_circle_radius
+           or np.isnan(center[0]) or np.isnan(center[1])):
             return None, None
         
 #         print [x1,y1], [x2,y2], [x3,y3], " center: ", center, " radius ", radius # Testing line, uncomment to test
@@ -235,7 +230,8 @@ if __name__ == '__main__':
             cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
             
         # Do the detection
-        landingSite(cv2.resize(src, None, fx = 0.25, fy = 0.25)).center
+        # Also reduce image size for faster processing speed
+        print landingSite(cv2.resize(src, None, fx = 0.25, fy = 0.25)).center
 
         # User input
         key = cv2.waitKey(30) & 0xFF
